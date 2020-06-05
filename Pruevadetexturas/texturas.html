@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Operaciones CSG</title>
+    <style>
+      html, body { margin: 0; padding: 0; overflow: hidden; }
+            html {
+            width: 100%;
+            height: 100%;
+            background: #11e8bb; /* Old browsers */
+            background: -moz-linear-gradient(top, #1772CF 0%, #000000 50%); /* FF3.6-15 */
+            background: -webkit-linear-gradient(top, #1772CF 0%,#000000 50%); /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom, #1772CF 0%,#000000 50%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3C0670', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
+        }
+    </style>
+  </head>
+  <body>
+    <div id="canvas"></div>
+    <script src="js/three.js"></script>
+	<script src="js/controls/OrbitControls.js"></script>
+	<script src="js/csg.js"></script>
+	<script src="js/THREE.CSG.js"></script>
+    <script>
+		var scene, aspect, camera, camera2, renderer, controls;
+        var spotLight,spotLight2;
+        var mapWidth = 320, mapHeight = 240;
+        var w = window.innerWidth, h = window.innerHeight;
+        var pi=3.1415;
+        var particulas;
+		init();
+		animate();
+		function init(){
+			//INICIALIZACIÓN
+	        scene = new THREE.Scene();
+            scene.background = new THREE.Color( 0x000000 );
+	        aspect = window.innerWidth / window.innerHeight;
+            
+	        camera = new THREE.PerspectiveCamera( 75, aspect, 0.1, 1000);
+            camera2 = new THREE.PerspectiveCamera( 45, 1.33, 0.1, 50);
+			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });;
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+            document.getElementById('canvas').appendChild(renderer.domElement);
+	        
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			
+            
+            var vector = new THREE.Vector3();
+			camera2.getWorldDirection( vector );
+			console.log(vector);
+			//ELEMENTOS COMUNES
+			var size = 10;
+			var arrowSize = 1;
+			var divisions = size;
+			var origin = new THREE.Vector3( 0, 0, 0 );
+			var x = new THREE.Vector3( 1, 0, 0 );
+			var y = new THREE.Vector3( 0, 1, 0 );
+		  	var z = new THREE.Vector3( 0, 0, 1 );
+		  	var color = new THREE.Color( 0x333333 );
+		  	var colorR = new THREE.Color(0x6BDAFF);
+		  	var colorG = new THREE.Color( 0x33AA33 );
+		  	var colorB = new THREE.Color( 0x333366 );
+            
+            
+            particulas = new THREE.Light;
+            scene.add(particulas);
+            var geometryp = new THREE.SphereGeometry(3, 32, 32);
+              var material = new THREE.MeshStandardMaterial( { color: 0x2CFF5A, metalness: 0.1, roughness: 50.1, transparent:true, opacity: 0.5  } );
+            
+              for (var i = 0; i < 1000; i++) {
+              var mesh = new THREE.Mesh(geometryp, material);
+            mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+            mesh.position.multiplyScalar(90 + (Math.random() * 700));
+            mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+            particulas.add(mesh);
+              }
+			
+		  	//CREAR LAS GRILLAS PARA EL ESCENARIO
+		  	var axesHelper = new THREE.AxesHelper( size );
+			scene.add( axesHelper );
+			
+		  	var gridHelperXZ = new THREE.GridHelper( size, divisions, color, color );
+			scene.add( gridHelperXZ );
+            
+            //ROTARLAS PARA QUE QUEDEN EN EL ESPACIO ADECUADO
+            gridHelperXZ.rotateOnWorldAxis ( y, THREE.Math.degToRad(90) );
+
+            //CREAR ILUMINACIÓN
+            
+            var widthr = 5;
+            var heightr = 10;
+            var intensity = 100000;
+            var rectLight = new THREE.RectAreaLight( 0xffffff, intensity,  widthr, heightr );
+            rectLight.position.set( 0, 70, -10 );
+            rectLight.lookAt( 0, 90, -50 );
+            scene.add( rectLight )
+
+            rectLightHelper = new THREE.RectAreaLightHelper( rectLight );
+            rectLight.add( rectLightHelper );
+            
+            
+            
+            
+            var ambient = new THREE.AmbientLight( 0xffffff, 2 );
+            //scene.add( ambient );
+			
+
+            
+           
+            var lightd = new THREE.DirectionalLight( 0xDDF8FF,1 );
+            lightd.position.set(0, 60, 10);
+            lightd.rotateX(pi/4);
+            var helperu = new THREE.DirectionalLightHelper( lightd, 5 );
+            //scene.add( helperu );
+            //scene.add( lightd );
+            
+
+            
+            var pointLight2 = new THREE.PointLight(0xFFFFFF,3.5, 10);
+            pointLight2.position.set(1, 3, -1.5);
+            //var helper = new THREE.PointLightHelper( pointLight2, .3 );
+            //scene.add(helper);
+           // scene.add(pointLight2);
+            scene.add(pointLight2);
+            
+            
+            var pointLight3 = new THREE.PointLight(0xFFFFFF,3.5, 4);
+            pointLight3.position.set(1, 3, 3);
+            //scene.add(pointLight3);
+            
+            var pointLight4 = new THREE.PointLight(0xFFFFFF,3.5, 4);
+            pointLight4.position.set(1, 3, -10);
+            scene.add(pointLight4);
+            
+            var pointLight5 = new THREE.PointLight(0xFFFFFF,3.5, 4);
+            pointLight5.position.set(0, 3, -12);
+            scene.add(pointLight5);
+            
+            var pointLight6 = new THREE.PointLight(0xFFFFFF,5, 4);
+            pointLight6.position.set(-4, 3, -12);
+            scene.add(pointLight6);
+            
+            var pointLight7 = new THREE.PointLight(0xFFFFFF,100, 10);
+            pointLight7.position.set(0, 50, -50);
+            //scene.add(pointLight7);
+            
+            
+				spotLight = new THREE.SpotLight( 0x124587, 5 );
+				spotLight.position.set( 0, 30, -5 );
+				spotLight.angle = -Math.PI / 8;
+				spotLight.penumbra = 0.5;
+				spotLight.decay = 1;
+				spotLight.distance = 40;
+
+				spotLight.castShadow = true;
+				spotLight.shadow.mapSize.width = 1024;
+				spotLight.shadow.mapSize.height = 1024;
+				spotLight.shadow.camera.near = 10;
+				spotLight.shadow.camera.far = 200;
+				scene.add( spotLight );
+            
+            
+				spotLight2 = new THREE.SpotLight( 0xffffff, 10 );
+				spotLight2.position.set( 0, 30, 0 );
+				spotLight2.angle = Math.PI / 8;
+				spotLight2.penumbra = 0.5;
+				spotLight2.decay = 2;
+				spotLight2.distance = 40;
+
+				spotLight2.castShadow = true;
+				spotLight2.shadow.mapSize.width = 1024;
+				spotLight2.shadow.mapSize.height = 1024;
+				spotLight2.shadow.camera.near = 10;
+				spotLight2.shadow.camera.far = 200;
+				scene.add( spotLight2 );
+
+				lightHelper = new THREE.SpotLightHelper( spotLight );
+				//scene.add( lightHelper );
+
+				shadowCameraHelper = new THREE.CameraHelper( spotLight.shadow.camera );
+				//scene.add( shadowCameraHelper );
+            
+
+            
+            
+				spotLight3 = new THREE.SpotLight( 0xffffff,100);
+				spotLight3.position.set( 0, 50, 0);
+                spotLight3.target.position.set(0,0,0);
+                //potLight3.rotateX(pi/2);
+				spotLight3.angle = Math.PI / 8;
+				spotLight3.penumbra = 0.5;
+				spotLight3.decay = 2;
+				spotLight3.distance = 100;
+                
+                //spotLight3.lookat(0,50,-100);
+				spotLight3.castShadow = true;
+				spotLight3.shadow.mapSize.width = 1024;
+				spotLight3.shadow.mapSize.height = 1024;
+				spotLight3.shadow.camera.near = 10;
+				spotLight3.shadow.camera.far = 200;
+				//scene.add( spotLight3.target);
+            	lightHelper3 = new THREE.SpotLightHelper( spotLight3 );
+				//scene.add( lightHelper3 );
+
+				
+            
+           // var lighta = new THREE.HemisphereLight( 0xffffbb, 0xFFFFFF, .5 );
+            //scene.add( lighta );
+            
+
+
+
+
+			
+			//CREAR LAS GEOMETRÍAS
+            
+            
+            //cubos
+			var boxGeometry = new THREE.BoxGeometry( 3, 4, 4 );
+            var boxGeometry2 = new THREE.BoxGeometry( 2.7, 2.5, 4);
+            var boxGeometry3 = new THREE.BoxGeometry( 4, 4, 15 );
+            var boxGeometry4 = new THREE.BoxGeometry( 3, 1.2, 3 );
+            var boxGeometry5 = new THREE.BoxGeometry( 4, 4, 4 );
+            var boxGeometry6 = new THREE.BoxGeometry( 8, 4, 4 );
+            var columna = new THREE.BoxGeometry( .15, 3, .6 );
+            var reja1 = new THREE.BoxGeometry( 2,3,2 );
+            var reja2 = new THREE.BoxGeometry( 2,3,2 );
+            var reja4 = new THREE.BoxGeometry( 2,3,2 );
+            var reja5 = new THREE.BoxGeometry( 2,3,2 );
+            //cilindros
+            var cylindre = new THREE.CylinderGeometry( 1.35, 1.355, 5, 32 );
+            
+            
+            //esferas
+			var sphereGeometry = new THREE.SphereGeometry(.3, 32, 32);
+			var cilindreGeometry= new THREE.CylinderGeometry(.3,.3,1.5,32);
+            
+            
+            //PLANOS
+            var piso = new THREE.PlaneGeometry( 30, 30, 32 );
+            
+						
+			//CREAR LOS MATERIALES
+			var material1 = new THREE.MeshPhongMaterial({ color: 0xAAAAAA, metalness: 1, roughness: 1,reflectivity:1});
+			var material2 = new THREE.MeshStandardMaterial( { color: 0x2CFF5A, metalness: 0.1, roughness: 50.1, transparent:true, opacity: 0.5,emissive:0xAAAAAA,emissiveIntensity:1  } );
+			var material3 = new THREE.MeshLambertMaterial({ color: 0x868884, metalness: 1, roughness: .1,reflectivity:1});
+            var material4 = new THREE.MeshPhongMaterial({ color: 0x61696B, metalness: 1, roughness: .1,reflectivity:1});
+                var blocksBase = new THREE.TextureLoader().load( 'textures/gray-bricks1-albedo.png' );
+				var blocksNormal = new THREE.TextureLoader().load( 'textures/gray-bricks1-Normal-dx.png' );
+                //blocksNormal.repeat.set(20, 20);
+               // blocksBase.repeat.set(10, 5);
+            blocksNormal.repeat.x = 20;
+            blocksNormal.repeat.y = 20;
+            blocksNormal.offset.x = 2;
+            blocksNormal.offset.y = .005;
+            blocksNormal.wrapS = blocksNormal.wrapT = THREE.RepeatWrapping;
+            
+            
+            blocksBase.repeat.x = 15;
+            blocksBase.repeat.y = 7;
+            blocksBase.offset.x = 2;
+            blocksBase.offset.y = .005;
+            blocksBase.wrapS = blocksBase.wrapT = THREE.RepeatWrapping;
+            var brickMaterial = new THREE.MeshStandardMaterial( { 
+                color: 0x868884, 
+                roughness: 1,
+				map: blocksBase,
+				normalMap: blocksNormal
+				} );
+            
+            var PisoBase = new THREE.TextureLoader().load( 'textures5/floor_tiles_02_ao_2k.png' );
+            var PisoNormal = new THREE.TextureLoader().load( 'textures5/floor_tiles_02_nor_2k.png' );                                                                                                                       var PisoRoughness = new THREE.TextureLoader().load( 'textures5/floor_tiles_02_rough_2k.png' );  
+  
+            PisoBase.repeat.x = 15;
+            PisoBase.repeat.y = 7;                                                                                                                                                                         
+            PisoBase.offset.x = 2;
+            PisoBase.offset.y = .005;
+            PisoNormal.wrapS = PisoNormal.wrapT = THREE.RepeatWrapping;
+				//STANDARD MATERIAL
+
+               var pisomaterial = new THREE.MeshStandardMaterial( { 
+                    color: 0x868884, 
+                    roughness: 1,
+				    map: PisoBase,
+					normalMap: PisoNormal,
+                   //height:PisoHeight
+				} );
+            
+            var suaveBase = new THREE.TextureLoader().load( 'textures3/concrete2_albedo.png' );
+            var suaveNormal = new THREE.TextureLoader().load( 'textures3/concrete2_Normal-ogl.png' );                                                                                                                       var suaveRoughness = new THREE.TextureLoader().load( 'textures3/paintedbrick1_Roughness.png' );  
+            var suaveHeight = new THREE.TextureLoader().load( 'textures3/concrete2_Height.png' );  
+            var suaveHeight2 = new THREE.TextureLoader().load( 'textures4/TexturesCom_Asphalt_13_header.jpg' );  
+            
+                        var suavematerial = new THREE.MeshStandardMaterial( { 
+                    color: 0x868884, 
+                    roughness: 1,
+				    map: suaveBase,
+					normalMap: suaveNormal,
+                   height:suaveHeight
+				} );
+            //crear las mayas
+			
+            var metalBase = new THREE.TextureLoader().load( 'textures4/steelplate1_albedo.png' );
+            var metalNormal = new THREE.TextureLoader().load( 'textures4/steelplate1_normal-dx.png' );                                                                                                                       var metalRoughness = new THREE.TextureLoader().load( 'textures4/steelplate1_roughness.png' );  
+            var metalHeight = new THREE.TextureLoader().load( 'textures4/steelplate1_height.png' );  
+
+            
+                        var metalmaterial = new THREE.MeshStandardMaterial( { 
+                    color: 0x868884, 
+                    roughness: metalRoughness,
+				    map: metalBase,
+					normalMap: metalNormal,
+                   height:metalHeight
+				} );
+            
+            var rockBase = new THREE.TextureLoader().load( 'textures6/granite-grey-albedo.png' );
+            var rockNormal = new THREE.TextureLoader().load( 'textures6/granite-grey-normal.png' );                                                                                                                       var rockRoughness = new THREE.TextureLoader().load( 'textures6/granite-grey-rough.png' );  
+            var rockHeight = new THREE.TextureLoader().load( 'textures6/steelplate1_height.png' );  
+
+            
+                    var rockmaterial = new THREE.MeshLambertMaterial( { 
+                    color: 0x868884, 
+                    roughness: rockRoughness,
+				    map: rockBase,
+					normalMap: rockNormal,
+                   //height:rockHeight
+				} );
+            
+            
+            
+             
+            var bloque1 = new THREE.Mesh( boxGeometry, material2 );
+            var bloque2 = new THREE.Mesh( boxGeometry2, material1 );  
+            var cil = new THREE.Mesh( cylindre, material1 );  
+            
+            var bloque3 = new THREE.Mesh( boxGeometry3,brickMaterial ); 
+            var bloque4 = new THREE.Mesh( boxGeometry3, brickMaterial ); 
+            var bloque5 = new THREE.Mesh( boxGeometry5, suavematerial ); 
+            var bloque6 = new THREE.Mesh( boxGeometry6, suavematerial ); 
+            
+            var bloque7 = new THREE.Mesh( boxGeometry4, rockmaterial );
+            //lamparas
+            var lampara1 = new THREE.Mesh( sphereGeometry, material2 );
+            
+            var reja1 = new THREE.Mesh( reja1, suavematerial );
+            var reja2 = new THREE.Mesh( reja2, metalmaterial );
+            var reja4 = new THREE.Mesh( reja4, suavematerial );
+            var reja5 = new THREE.Mesh( reja5, metalmaterial );
+            var columna1 = new THREE.Mesh( columna, rockmaterial );
+            var columna2 = new THREE.Mesh( columna, rockmaterial );
+            var columna3 = new THREE.Mesh( columna, rockmaterial );
+            var columna4 = new THREE.Mesh( columna, rockmaterial );
+            //piso
+            var piso = new THREE.Mesh( piso, pisomaterial );
+            reja1.translateY(1.5);
+            reja1.translateZ(-.5);
+            reja1.translateX(-2.5);
+            reja2.translateY(1.5);
+            reja2.translateZ(-.5);
+            reja2.translateX(-2.47);
+            reja4.translateY(1.5);
+            reja4.translateZ(2.5);
+            reja4.translateX(-2.5);
+            reja5.translateY(1.5);
+            reja5.translateZ(2.5);
+            reja5.translateX(-2.47);
+            
+            
+            bloque1.translateY(2.5);
+            bloque2.translateY(1);
+            bloque3.translateY(2);
+            bloque3.translateX(3.5);
+            bloque3.translateZ(-2);
+            bloque4.translateY(2);
+            bloque4.translateX(-3.5);
+            bloque4.translateZ(-2);
+           // scene.add(bloque1);
+            //scene.add(bloque2);
+            //scene.add(cil);
+            
+            bloque5.translateY(2);
+            bloque5.translateX(2.6);
+            bloque5.translateZ(-12);
+            bloque5.rotateY(pi/8);
+            bloque6.translateY(2);
+            bloque6.translateX(-4);
+            bloque6.translateZ(-15)
+            //bloque6.rotateY(pi/8);
+            
+            
+            bloque7.translateY(3.5);
+            bloque7.translateZ(-4);
+            
+            
+            
+            columna1.translateY(1.5);
+            columna1.translateX(-1.45);
+            columna1.translateZ(-2.8);
+            
+            columna2.translateY(1.5);
+            columna2.translateX(1.45);
+            columna2.translateZ(-2.8);
+            
+            columna3.translateY(1.5);
+            columna3.translateX(1.45);
+            columna3.translateZ(-5.2);
+            
+            columna4.translateY(1.5);
+            columna4.translateX(-1.45);
+            columna4.translateZ(-5.2);
+           //bloque7.translateZ(-2.5);
+            
+            
+            
+            
+            
+            
+            lampara1.position.set(1, 2.5, -1.5);
+
+            
+            
+            
+            cil.rotateX(pi/2);
+            cil.translateZ(-2);
+            
+            
+            
+            piso.rotateX(-pi/2);
+            
+           
+            
+            //cgs
+            
+            var boxCSG1 = THREE.CSG.fromMesh( bloque1 );
+            var boxCSG2 = THREE.CSG.fromMesh( bloque2 );
+            var boxCSG3 = THREE.CSG.fromMesh( bloque7 );
+            
+            var cilCSG1 = THREE.CSG.fromMesh( cil );
+            
+            var boxCSG4 = THREE.CSG.fromMesh( bloque4 );
+            var boxCSG5 = THREE.CSG.fromMesh( reja1 );
+            var boxCSG6 = THREE.CSG.fromMesh( reja4 );
+            var result1 = boxCSG1.subtract( boxCSG2 ).subtract(cilCSG1).subtract(boxCSG3);
+            var result2 = boxCSG4.subtract( boxCSG5 ).subtract( boxCSG6 );
+            var sideMaterial = new THREE.MeshPhongMaterial({shininess: 0, color: '#aaaaaa', wireframe: true});
+            
+            var C2T1 = THREE.CSG.toMesh( result1,);
+            var C2T2 = THREE.CSG.toMesh( result2 );
+            C2T1.material = sideMaterial;
+            C2T2.material = sideMaterial;
+            C2T1.translateY(-.5);
+            C2T1.translateZ(-4.5);
+            
+            //nuevos mesh
+            
+            
+            
+            
+            
+            
+            
+            //agregar a la escena
+			//scene.add(C2T1)
+			//scene.add( C2T2 );
+            
+             scene.add(columna1);
+             scene.add(columna2);
+            scene.add(columna3);
+            scene.add(columna4);
+            scene.add( bloque3 );
+            scene.add( bloque4 );
+            scene.add( bloque5 );
+            scene.add( bloque6 );
+            scene.add( bloque7 );
+            //scene.add(lampara1);
+            scene.add(piso);
+            //scene.add(cil);//ACTIVAR PARA VISUALIZAR LA ESFERA
+
+			camera.position.x = 5;
+			camera.position.y = 5;
+		  	camera.position.z = 10;
+			
+		  	camera.lookAt( origin );
+            
+            
+			camera2.position.z =5;
+            camera2.position.y = .1;
+            camera2.position.x = -1;
+            camera2.lookAt( .5,1,-1 );
+            
+            
+            scene.add(reja2);
+		  	scene.add(reja5);
+		}
+		function animate(){
+              particulas.rotation.x += 0.0000;
+            particulas.rotation.y -= 0.0040;
+			requestAnimationFrame( animate );
+			controls.update();
+			render();
+		}
+		function render(){
+			
+            renderer.setViewport( 0, 0, w, h );
+            renderer.setScissor( 0, 0, w, h );
+            renderer.render( scene, camera );
+            renderer.setViewport( 10, 10, mapWidth, mapHeight );
+            renderer.setScissor( 10, 10, mapWidth, mapHeight );
+            renderer.setScissorTest( true );
+            renderer.render( scene, camera2 );
+		}
+    </script>
+  </body>
+</html>
